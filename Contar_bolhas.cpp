@@ -1,6 +1,6 @@
 
 /*
-  Programa para contar obbjetos e os numero de buracos dentro  deles
+  Programa para contar obbjetos e os numero de buracos dentro deles
 
   Autor : Alex Alves
 */
@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-
 CvPoint ponto(int i, int j);
 void Bordas( Mat bolha, int passo_linha,int passo_coluna);
 
