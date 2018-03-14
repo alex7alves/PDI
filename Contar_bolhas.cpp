@@ -17,7 +17,7 @@ int main(int argc, char** argv){
 
     Mat image;
 
-    int nobjects=0,anterior,soma=0,aux[10],cont=0;
+    int nobjects=0,anterior,soma=0,cont=0;
     int vetorburacos[10];
     CvPoint p;
     image = imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
@@ -51,7 +51,8 @@ int main(int argc, char** argv){
             }
         }
     }
-   
+    p=ponto(0,0);
+    floodFill(bolha,p,255);
     // busca objetos com buracos presentes
     for(int i=0; i<bolha.rows; i++){
         for(int j=0; j<bolha.cols; j++){
@@ -63,7 +64,6 @@ int main(int argc, char** argv){
                     // proxima vez se tiver outro buraco
                     p=ponto(i,j);
                     anterior++;
-                    printf(" anterior = %d\n",anterior);
                     floodFill(bolha,p,anterior);
                     // pinta o anterior tambem
                     p=ponto(i,j-1);
@@ -76,11 +76,8 @@ int main(int argc, char** argv){
     }
     // Ajustando pois todo objeto que tem 3 buracos 
     // ja foi contabilizado no 1 e no 2 também ai tem que tirar essa diferenca
-     for(int k=0; k<10; k++){
-        aux[k] = vetorburacos[k];
-    }
     for(int k=8; k>=1; k--){
-        soma = soma + aux[k+1];
+        soma = soma + vetorburacos[k+1];
         vetorburacos[k] = vetorburacos[k] -soma;
         cont = cont+vetorburacos[k];
     }
@@ -88,10 +85,7 @@ int main(int argc, char** argv){
     printf("Foram encontrados %d objetos dos quais :\n",nobjects);
     for(int k=0; k<10; k++){
         printf(" %d objetos com %d buracos \n",vetorburacos[k],k);
-    }
-    // Para visualizar a saida
-    p=ponto(0,0);
-    floodFill(bolha,p,100);
+    }   
     imshow("image", image);
     imshow("Modificado",bolha);
     //imwrite("labeling.png", image);
