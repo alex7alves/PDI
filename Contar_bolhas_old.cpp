@@ -35,7 +35,6 @@ int main(int argc, char** argv){
     // Retirando bolhas que tocam as bordas nas colunas
     Bordas(bolha,1,bolha.cols-1);
 
-     
     // busca objetos  presentes
     for(int i=0; i<bolha.rows; i++){
         for(int j=0; j<bolha.cols; j++){
@@ -68,7 +67,6 @@ int main(int argc, char** argv){
 
 CvPoint ponto(int i, int j)
 {
-
     CvPoint p;
     p.x=j;
     p.y=i;
@@ -77,7 +75,6 @@ CvPoint ponto(int i, int j)
 
 void Bordas( Mat bolha, int passo_linha,int passo_coluna)
 {
-
     CvPoint p;
     for(int i=0; i<bolha.rows; i = i+passo_linha){
         for(int j=0; j<bolha.cols; j= j+passo_coluna){
