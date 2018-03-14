@@ -9,29 +9,8 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-
-
-CvPoint ponto(int i, int j){
-
-    CvPoint p;
-    p.x=j;
-    p.y=i;
-    return p;
-}
-
-void Bordas( Mat bolha, int passo_linha,int passo_coluna)
-{
-
-    CvPoint p;
-    for(int i=0; i<bolha.rows; i = i+passo_linha){
-        for(int j=0; j<bolha.cols; j= j+passo_coluna){
-            if(bolha.at<uchar>(i,j)==255){
-                p=ponto(i,j);
-                floodFill(bolha,p,0);
-            }
-        }
-    }
-}
+CvPoint ponto(int i, int j);
+void Bordas( Mat bolha, int passo_linha,int passo_coluna);
 
 int main(int argc, char** argv){
 
@@ -85,4 +64,27 @@ int main(int argc, char** argv){
     //imwrite("labeling.png", image);
     waitKey();
     return 0;
+}
+
+CvPoint ponto(int i, int j)
+{
+
+    CvPoint p;
+    p.x=j;
+    p.y=i;
+    return p;
+}
+
+void Bordas( Mat bolha, int passo_linha,int passo_coluna)
+{
+
+    CvPoint p;
+    for(int i=0; i<bolha.rows; i = i+passo_linha){
+        for(int j=0; j<bolha.cols; j= j+passo_coluna){
+            if(bolha.at<uchar>(i,j)==255){
+                p=ponto(i,j);
+                floodFill(bolha,p,0);
+            }
+        }
+    }
 }
