@@ -4,9 +4,8 @@
 
     Autor : Alex Alves
 */
-
-
 #include <iostream>
+#include <stdio.h>
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
@@ -39,7 +38,7 @@ int main(int argc, char** argv){
 
     int histw = nbins, histh = nbins/2;
     Mat histImgG(histh, histw, CV_8UC3, Scalar(0,0,0));
-    //histG2.setTo(Scalar(0));
+
     while(1){
         cap >> image;
         split (image, planes);
@@ -50,23 +49,20 @@ int main(int argc, char** argv){
 
         normalize(histG, histG, 0, histImgG.rows, NORM_MINMAX, -1, Mat());
 
-        if( histG2.data && compareHist(histG,histG2,CV_COMP_CHISQR)>50){
+        if( histG2.data && compareHist(histG,histG2,CV_COMP_CHISQR)>20){
             // Se houve movimento escreve mensagem na imagem
-            putText(image,"Ocorreu um movimento !!!",cvPoint(100,300),FONT_HERSHEY_SCRIPT_COMPLEX,
-                    1,cvScalar(10,255,10),1,CV_AA);
+            putText(image,"Ocorreu um movimento !!!",cvPoint(50,height-20),FONT_HERSHEY_SCRIPT_COMPLEX,
+                    1,cvScalar(255,0,20),1,8);
         }
-        // Usa essa imagem para comparar os 2 histogramas
-        
+           
         for(int i=0; i<nbins; i++){
 
           line(histImgG,
                Point(i, histh),
                Point(i, histh-cvRound(histG.at<float>(i))),
                Scalar(0, 255, 0), 1, 8, 0);
-
         }
         histG2 =histG.clone();
-        //histImgG.copyTo(image(Rect(0, histh   ,nbins, histh)));
         imshow("image", image);
         waitKey(30);
     }
