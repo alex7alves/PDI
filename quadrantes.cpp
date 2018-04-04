@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     }
     imshow(" Original ",image);
     imshow("Modificada",matriz);
-    imwrite("quadrantes.png", image);
+    imwrite("quadrantes.png",matriz);
     waitKey();
     return 0;
 }
