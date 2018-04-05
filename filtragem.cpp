@@ -1,3 +1,13 @@
+
+/* 
+  Programa para adicionar o filtro do 
+  laplaciano do gaussiano 
+
+    Autor : Alex Alves
+  
+*/
+
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -73,7 +83,6 @@ int main(int argvc, char** argv){
   menu();
   for(;;){
     video >> cap; 
-  //  frame =cap;
     cvtColor(cap, frame, CV_BGR2GRAY);
     flip(frame, frame, 1);
     imshow("original", frame);
@@ -123,13 +132,6 @@ int main(int argvc, char** argv){
     case 'o':
       menu();
       mask = Mat(5, 5, CV_32F, LOG);
-     /* mask = Mat(3, 3, CV_32F, gauss);
-      scaleAdd(mask, 1/16.0, Mat::zeros(3,3,CV_32F), mask1);
-      mask = mask1;
-      mask = Mat(3, 3, CV_32F, laplacian);*/
-      //scaleAdd(mask, 1/16.0, Mat::zeros(3,3,CV_32F), mask1);
-      //mask = mask1;
-
       printmask(mask);
       break;
     default:
