@@ -1,7 +1,7 @@
 
 /* 
   Programa para aplicar o efeito de tiltshift
-  em uma imagem
+  em um video
 
   Autor : Alex Alves
 
@@ -27,25 +27,44 @@ void on_fim(int, void*);
 
 int main(int argvc, char** argv){
   int *borrar, *borrar_slider, *foco_inicio_slider,*foco_fim_slider;
-  Mat image, borrado;
-
-  image = imread(argv[1]);
-  Mat matriz(image.rows,image.cols,image.type());
-
+  Mat image, borrado,matriz;
+  int tirarQuadro =2; // usado acelerar os quadros
+  int cont=tirarQuadro;
+  VideoCapture cap(argv[1]);
+  if(!cap.isOpened()){
+    printf(" O video nao abriu\n");
+    return -1;
+      
+  }
+  int w  = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+  int h = cap.get(CV_CAP_PROP_FRAME_HEIGHT);  
+  int frames = cap.get(CV_CAP_PROP_FPS);
+  
+  VideoWriter saida("Resultado.avi", CV_FOURCC('M','J','P','G'), frames, Size(w,h));
+  if(!saida.isOpened()){
+    printf(" O video nao grava\n");
+    return -1;
+      
+  }
+  
   Alocar(&borrar,&borrar_slider);
   Alocar(&foco_inicio_slider,&foco_fim_slider);
-
   setValores(borrar,borrar_slider,foco_inicio_slider,foco_fim_slider);
  
   namedWindow("Tiltshift", 1);
 
  
   createTrackbar( "Borrar", "Tiltshift",borrar_slider,*borrar,on_borrar );
-  createTrackbar( "Inicio ", "Tiltshift",foco_inicio_slider,image.rows-30,on_inicio );
-  createTrackbar( "Fim", "Tiltshift",foco_fim_slider,image.rows,on_fim );
+  createTrackbar( "Inicio ", "Tiltshift",foco_inicio_slider,610,on_inicio );
+  createTrackbar( "Fim", "Tiltshift",foco_fim_slider,640,on_fim );
   
-  while(1){
+  // Para inicializr 'matriz' nas mesmas propriedades do video
+  cap >> image; 
+  matriz = image.clone();
 
+  while(1){
+    cap >> image;
+     
     on_borrar(*borrar_slider, 0 );
     on_inicio(*foco_inicio_slider, 0 );
     on_fim(*foco_fim_slider, 0 );
@@ -57,15 +76,29 @@ int main(int argvc, char** argv){
     }else{
       TiltShift(foco_fim_slider,foco_inicio_slider,image,borrado,matriz);
     }
-    imshow("Tiltshift",matriz);
+    
+    if(cont==tirarQuadro){
+       saida << matriz;
+       cont=0;
+       imshow("Tiltshift",matriz);
+    }
+    if(image.empty()){
+      break;
+    }
+    cont++;
+    
     if(waitKey(20)==27){
-      imwrite("tiltshift.jpg",matriz);
+      
       break;
     } 
   }
-   
+  cap.release();
+  saida.release();
+  destroyAllWindows();
+  
   return 0;
 }
+
 void Alocar(int **x, int **x2){
   *x = new int;
   *x2 = new int;
