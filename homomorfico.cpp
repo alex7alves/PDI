@@ -56,10 +56,10 @@ void Filtro_Homomorfico(Mat temp, int *gl,int *gh, int *c,int *d0,int dft_M,int 
   c_aux = *c/10;
   d0_aux = *d0/100;
 
-  for(int i=0; i < tmp.rows; i++){
-    for(int j=0; j < tmp.cols; j++){
+  for(int i=0; i < temp.rows; i++){
+    for(int j=0; j < temp.cols; j++){
       float t = (i-dft_M/2)*(i-dft_M/2)+(j-dft_N/2)*(j-dft_N/2);
-      tmp.at<float>(i,j) = (gh_aux-gl_aux)*(1.0 - (float)exp(-(c_aux*t/(d0_aux*d0_aux)))) + gl_aux;
+      temp.at<float>(i,j) = (gh_aux-gl_aux)*(1.0 - (float)exp(-(c_aux*t/(d0_aux*d0_aux)))) + gl_aux;
     }
   }
 
@@ -73,7 +73,7 @@ int main(int argvc, char** argv){
   Mat image, imagegray, tmp; 
   Mat_<float> realInput, zeros;
   vector<Mat> planos;
-
+  float mean;
   int *gl,*gh,*d0,*c;
 
   image = imread(argv[1]);
@@ -118,7 +118,7 @@ int main(int argvc, char** argv){
 
  
   createTrackbar( "c", "Filtro",c,100,on_c );
-  createTrackbar( "d0 ","Filtro",d0_slider,100,on_d0 );
+  createTrackbar( "d0 ","Filtro",d0,100,on_d0 );
   createTrackbar( "gamma_h", "Filtro",gh,100,on_gamma_h );
   createTrackbar( "gamma_l", "Filtro",gl,100,on_gamma_l );
  
@@ -127,9 +127,9 @@ int main(int argvc, char** argv){
     on_c(*c, 0 );
     on_d0(*d0, 0 );
     on_gamma_h(*gh, 0 );
-    on_gamma_l(*gj, 0 );
+    on_gamma_l(*gl, 0 );
 
-    Filtro_Homomorfico(temp,gl,gh,c,d0,dft_M,dft_N);
+    Filtro_Homomorfico(tmp,gl,gh,c,d0,dft_M,dft_N);
 
     // cria a matriz com as componentes do filtro e junta
     // ambas em uma matriz multicanal complexa
@@ -160,7 +160,7 @@ int main(int argvc, char** argv){
     dft(complexImage, complexImage);
 
     // realiza a troca de quadrantes
-    TrocarQuadrantes(complexImage);
+    TrocarQuadrantes(imagegray,complexImage);
 
     // aplica o filtro frequencial
     mulSpectrums(complexImage,filter,complexImage,0);
@@ -170,13 +170,13 @@ int main(int argvc, char** argv){
     // separa as partes real e imaginaria para modifica-las
     split(complexImage, planos);
      // usa o valor medio do espectro para dosar o ruido 
-    mean = abs(planos[0].at<float> (dft_M/2,dft_N/2));
+    mean = abs(planos[0].at<float>(dft_M/2,dft_N/2));
 
     // recompoe os planos em uma unica matriz complexa
     merge(planos, complexImage);
 
     // troca novamente os quadrantes
-    TrocarQuadrantes(complexImage);
+    TrocarQuadrantes(imagegray,complexImage);
 
 
     // calcula a DFT inversa
@@ -191,7 +191,7 @@ int main(int argvc, char** argv){
 
     // normaliza a parte real para exibicao
     normalize(planos[0], planos[0], 0, 1, CV_MINMAX);
-    imshow("filtrada", planos[0]);
+    imshow("filtrado", planos[0]);
  
     if(waitKey(10)== 27 ) break; // esc pressed!
     
