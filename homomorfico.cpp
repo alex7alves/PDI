@@ -120,52 +120,56 @@ int main(int argvc, char** argv){
   createTrackbar( "c", "Filtro",c,100,on_c );
   createTrackbar( "d0 ","Filtro",d0_slider,100,on_d0 );
   createTrackbar( "gamma_h", "Filtro",gh,100,on_gamma_h );
-  createTrackbar( "gamma_l", "Filtro",gh,100,on_gamma_l );
+  createTrackbar( "gamma_l", "Filtro",gl,100,on_gamma_l );
  
 
+  while(1){
+    on_c(*c, 0 );
+    on_d0(*d0, 0 );
+    on_gamma_h(*gh, 0 );
+    on_gamma_l(*gj, 0 );
 
-  Filtro_Homomorfico(temp,gl,gh,c,d0,dft_M,dft_N);
+    Filtro_Homomorfico(temp,gl,gh,c,d0,dft_M,dft_N);
 
-  // cria a matriz com as componentes do filtro e junta
-  // ambas em uma matriz multicanal complexa
-  Mat comps[]= {tmp, tmp};
-  merge(comps, 2, filter);
+    // cria a matriz com as componentes do filtro e junta
+    // ambas em uma matriz multicanal complexa
+    Mat comps[]= {tmp, tmp};
+    merge(comps, 2, filter);
 
 
-  // realiza o padding da imagem
-  copyMakeBorder(imagegray, padded, 0,
-                  dft_M - image.rows, 0,
-                  dft_N - image.cols,
-                  BORDER_CONSTANT, Scalar::all(0));
+    // realiza o padding da imagem
+    copyMakeBorder(imagegray, padded, 0,
+                    dft_M - image.rows, 0,
+                    dft_N - image.cols,
+                    BORDER_CONSTANT, Scalar::all(0));
 
-  // limpa o array de matrizes que vao compor a
-  // imagem complexa
-  planos.clear();
-  // cria a compoente real
-  realInput = Mat_<float>(padded);
-  // insere as duas componentes no array de matrizes
-  planos.push_back(realInput);
-  planos.push_back(zeros);
+    // limpa o array de matrizes que vao compor a
+    // imagem complexa
+    planos.clear();
+    // cria a compoente real
+    realInput = Mat_<float>(padded);
+    // insere as duas componentes no array de matrizes
+    planos.push_back(realInput);
+    planos.push_back(zeros);
 
-  // combina o array de matrizes em uma unica
-  // componente complexa
-  merge(planos, complexImage);
+    // combina o array de matrizes em uma unica
+    // componente complexa
+    merge(planos, complexImage);
 
-  // calcula o dft
-  dft(complexImage, complexImage);
+    // calcula o dft
+    dft(complexImage, complexImage);
 
-  // realiza a troca de quadrantes
-  deslocaDFT(complexImage);
+    // realiza a troca de quadrantes
+    TrocarQuadrantes(complexImage);
 
-  // aplica o filtro frequencial
-  mulSpectrums(complexImage,filter,complexImage,0);
+    // aplica o filtro frequencial
+    mulSpectrums(complexImage,filter,complexImage,0);
 
-  // limpa o array de planos
-  planos.clear();
-  // separa as partes real e imaginaria para modifica-las
-  split(complexImage, planos);
- 
-    // usa o valor medio do espectro para dosar o ruido 
+    // limpa o array de planos
+    planos.clear();
+    // separa as partes real e imaginaria para modifica-las
+    split(complexImage, planos);
+     // usa o valor medio do espectro para dosar o ruido 
     mean = abs(planos[0].at<float> (dft_M/2,dft_N/2));
 
     // recompoe os planos em uma unica matriz complexa
@@ -191,6 +195,10 @@ int main(int argvc, char** argv){
  
     if(waitKey(10)== 27 ) break; // esc pressed!
     
+  }
+  
+ 
+   
   
   return 0;
 }
