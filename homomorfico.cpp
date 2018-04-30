@@ -73,7 +73,6 @@ int main(int argvc, char** argv){
   Mat image, imagegray, tmp; 
   Mat_<float> realInput, zeros;
   vector<Mat> planos;
-  float mean;
   int *gl,*gh,*d0,*c;
 
   image = imread(argv[1]);
@@ -129,14 +128,7 @@ int main(int argvc, char** argv){
     on_gamma_h(*gh, 0 );
     on_gamma_l(*gl, 0 );
 
-    Filtro_Homomorfico(tmp,gl,gh,c,d0,dft_M,dft_N);
-
-    // cria a matriz com as componentes do filtro e junta
-    // ambas em uma matriz multicanal complexa
-    Mat comps[]= {tmp, tmp};
-    merge(comps, 2, filter);
-
-
+    
     // realiza o padding da imagem
     copyMakeBorder(imagegray, padded, 0,
                     dft_M - image.rows, 0,
@@ -162,23 +154,18 @@ int main(int argvc, char** argv){
     // realiza a troca de quadrantes
     TrocarQuadrantes(imagegray,complexImage);
 
+    Filtro_Homomorfico(tmp,gl,gh,c,d0,dft_M,dft_N);
+
+    // cria a matriz com as componentes do filtro e junta
+    // ambas em uma matriz multicanal complexa
+    Mat comps[]= {tmp, tmp};
+    merge(comps, 2, filter);
     // aplica o filtro frequencial
     mulSpectrums(complexImage,filter,complexImage,0);
 
-    // limpa o array de planos
-    planos.clear();
-    // separa as partes real e imaginaria para modifica-las
-    split(complexImage, planos);
-     // usa o valor medio do espectro para dosar o ruido 
-    mean = abs(planos[0].at<float>(dft_M/2,dft_N/2));
-
-    // recompoe os planos em uma unica matriz complexa
-    merge(planos, complexImage);
-
-    // troca novamente os quadrantes
+     // troca novamente os quadrantes
     TrocarQuadrantes(imagegray,complexImage);
-
-
+ 
     // calcula a DFT inversa
     idft(complexImage, complexImage);
 
@@ -191,14 +178,12 @@ int main(int argvc, char** argv){
 
     // normaliza a parte real para exibicao
     normalize(planos[0], planos[0], 0, 1, CV_MINMAX);
-    imshow("filtrado", planos[0]);
+    imshow("Filtro", planos[0]);
  
     if(waitKey(10)== 27 ) break; // esc pressed!
     
   }
   
- 
-   
-  
+
   return 0;
 }
