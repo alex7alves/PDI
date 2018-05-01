@@ -1,105 +1,31 @@
+
+/*
+  Programa para executar um filtro homomorfico
+  e reduzir efeitos prejudiciais da luminancia 
+  em uma imagem
+
+  Autor : Alex Alves
+
+*/
+
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#define RADIUS 20
 
 using namespace cv;
 using namespace std;
 
+void Alocar(int **x, int **x2);
+void setValores(int *gl,int *gh, int *c,int *d0);
+void on_gamma_l(int, void*);
+void on_gamma_h(int, void*);
+void on_c(int, void*);
+void on_d0(int, void*);
+void deslocaDFT(Mat& image );
+void Filtro_Homomorfico(Mat temp, int *gl,int *gh, int *c,int *d0,int dft_M,int  dft_N);
 
-
-void Alocar(int **x, int **x2){
-  *x = new int;
-  *x2 = new int;
-}
-void setValores(int *gl,int *gh, int *c,int *d0){
-    *gl=10;
-    *gh=20;
-    *c=60;
-    *d0=70;
-}
-
-// Funcoes vazias mas servem para direcionar os ponteiros
-void on_gamma_l(int, void*){
-}
-
-void on_gamma_h(int, void*){
-}
-void on_c(int, void*){
-}
-void on_d0(int, void*){
-}
-
-void TrocarQuadrantes(Mat matriz){
-
-  Mat image = matriz.clone();
-  //Mat matriz(image.rows,image.cols,image.type());
-  int ql =image.rows/2,qc=image.cols/2;
-  for(int i=0; i<ql ;i++)
-  {
-    for(int j=0; j<qc ; j++)
-    {
-     /* matriz.at<float>(i,j)=image.at<float>(i+ql,j+qc);
-      matriz.at<float>(i+ql,j+qc)=image.at<float>(i,j);
-      matriz.at<float>(i,j+qc)=image.at<float>(i+ql,j);
-      matriz.at<float>(i+ql,j)=image.at<float>(i,j+qc);
-      */
-      
-      
-      matriz.at<uchar>(i,j)=image.at<uchar>(i+ql,j+qc);
-            matriz.at<uchar>(i+ql,j+qc)=image.at<uchar>(i,j);
-            matriz.at<uchar>(i,j+qc)=image.at<uchar>(i+ql,j);
-            matriz.at<uchar>(i+ql,j)=image.at<uchar>(i,j+qc);
-    }
-  }
-
-}
-
-
-void deslocaDFT(Mat& image ){
-  Mat tmp, A, B, C, D;
-
-  // se a imagem tiver tamanho impar, recorta a regiao para
-  // evitar cópias de tamanho desigual
-  image = image(Rect(0, 0, image.cols & -2, image.rows & -2));
-  int cx = image.cols/2;
-  int cy = image.rows/2;
-  
-  // reorganiza os quadrantes da transformada
-  // A B   ->  D C
-  // C D       B A
-  A = image(Rect(0, 0, cx, cy));
-  B = image(Rect(cx, 0, cx, cy));
-  C = image(Rect(0, cy, cx, cy));
-  D = image(Rect(cx, cy, cx, cy));
-
-  // A <-> D
-  A.copyTo(tmp);  D.copyTo(A);  tmp.copyTo(D);
-
-  // C <-> B
-  C.copyTo(tmp);  B.copyTo(C);  tmp.copyTo(B);
-}
-
-
-
-void Filtro_Homomorfico(Mat temp, int *gl,int *gh, int *c,int *d0,int dft_M,int  dft_N)
-{
-
-  float gl_aux,gh_aux,c_aux,d0_aux;
-  gl_aux= *gl/10;
-  gh_aux = *gh/10;
-  c_aux = *c/10;                        ;
-  d0_aux = *d0/10;
-
-  for(int i=0; i < temp.rows; i++){
-    for(int j=0; j < temp.cols; j++){
-      float t = (i-dft_M/2)*(i-dft_M/2)+(j-dft_N/2)*(j-dft_N/2);
-      temp.at<float>(i,j) = (gh_aux-gl_aux)*(1.0 - (float)exp(-(c_aux*t/(d0_aux*d0_aux)))) + gl_aux;
-    }
-  }
-
-}
 
 
 
@@ -112,7 +38,6 @@ int main(int argvc, char** argv){
   int *gl,*gh,*d0,*c;
 
   image = imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
-Mat matriz(image.rows,image.cols,image.type());
   Alocar(&gl,&gh);
   Alocar(&c,&d0);
   setValores(gl,gh,c,d0);
@@ -187,11 +112,8 @@ Mat matriz(image.rows,image.cols,image.type());
     dft(complexImage, complexImage);
 
     // realiza a troca de quadrantes
-   // TrocarQuadrantes(complexImage);
-   // imshow("troc", image);
- deslocaDFT(complexImage);
+    deslocaDFT(complexImage);
 
-    //imshow("troc", complexImage);
     Filtro_Homomorfico(tmp,gl,gh,c,d0,dft_M,dft_N);
 
     // cria a matriz com as componentes do filtro e junta
@@ -201,9 +123,8 @@ Mat matriz(image.rows,image.cols,image.type());
     // aplica o filtro frequencial
     mulSpectrums(complexImage,filter,complexImage,0);
 
-     // troca novamente os quadrantes
-    //TrocarQuadrantes(complexImage);
-     deslocaDFT(complexImage);
+    // troca novamente os quadrantes
+    deslocaDFT(complexImage);
  
     // calcula a DFT inversa
     idft(complexImage, complexImage);
@@ -222,7 +143,71 @@ Mat matriz(image.rows,image.cols,image.type());
     if(waitKey(10)== 27 ) break; // esc pressed!
     
   }
-  
-
   return 0;
+}
+
+void Alocar(int **x, int **x2){
+  *x = new int;
+  *x2 = new int;
+}
+void setValores(int *gl,int *gh, int *c,int *d0){
+  *gl=10;
+  *gh=20;
+  *c=60;
+  *d0=70;
+}
+
+// Funcoes vazias mas servem para direcionar os ponteiros
+void on_gamma_l(int, void*){
+}
+
+void on_gamma_h(int, void*){
+}
+void on_c(int, void*){
+}
+void on_d0(int, void*){
+}
+void deslocaDFT(Mat& image )
+{
+  Mat tmp, A, B, C, D;
+
+  // se a imagem tiver tamanho impar, recorta a regiao para
+  // evitar cópias de tamanho desigual
+  image = image(Rect(0, 0, image.cols & -2, image.rows & -2));
+  int cx = image.cols/2;
+  int cy = image.rows/2;
+  
+  // reorganiza os quadrantes da transformada
+  // A B   ->  D C
+  // C D       B A
+  A = image(Rect(0, 0, cx, cy));
+  B = image(Rect(cx, 0, cx, cy));
+  C = image(Rect(0, cy, cx, cy));
+  D = image(Rect(cx, cy, cx, cy));
+
+  // A <-> D
+  A.copyTo(tmp);  D.copyTo(A);  tmp.copyTo(D);
+
+  // C <-> B
+  C.copyTo(tmp);  B.copyTo(C);  tmp.copyTo(B);
+}
+
+
+
+void Filtro_Homomorfico(Mat temp, int *gl,int *gh, int *c,int *d0,int dft_M,int  dft_N)
+{
+
+  float gl_aux,gh_aux,c_aux,d0_aux;
+  gl_aux= *gl/10;
+  gh_aux = *gh/10;
+  c_aux = *c/10;                        ;
+  d0_aux = *d0/10;
+
+  for(int i=0; i < temp.rows; i++){
+    for(int j=0; j < temp.cols; j++){
+      float t = (i-dft_M/2)*(i-dft_M/2)+(j-dft_N/2)*(j-dft_N/2);
+      temp.at<float>(i,j) = (gh_aux-gl_aux)*(1.0 - (float)exp(-(c_aux*t/(d0_aux*d0_aux)))) + gl_aux;
+    }
+  }
+
 }
