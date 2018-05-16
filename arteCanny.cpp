@@ -22,21 +22,20 @@ using namespace cv;
 
 #define STEP 5
 #define JITTER 3
-#define RAIO 3
+#define RAIO 4
 
 int main(int argc, char** argv){
   vector<int> yrange;
   vector<int> xrange;
 
-  Mat image, frame, points,cinza;
+  Mat image, frame, points,cinza,borrar,bordas;
+  int fator =60;
 
-
-  int width, height, gray;
+  int width, height;
   int x, y;
   image = imread(argv[1]);
-  //image= imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);
-  cvtColor(image, cinza, CV_BGR2GRAY);
-  Canny(cinza, border, top_slider, 3*top_slider);
+  Mat  arte(image.rows,image.cols,image.type());
+  Vec3b cor;
 
   srand(time(0));
   
@@ -63,7 +62,7 @@ int main(int argc, char** argv){
     yrange[i]= yrange[i]*STEP+STEP/2;
   }
 
-  points = Mat(height, width, CV_8U, Scalar(255));
+  //points = Mat(height, width, CV_8U, Scalar(255));
 
   random_shuffle(xrange.begin(), xrange.end());
   
@@ -72,17 +71,42 @@ int main(int argc, char** argv){
     for(auto j : yrange){
       x = i+rand()%(2*JITTER)-JITTER+1;
       y = j+rand()%(2*JITTER)-JITTER+1;
-      gray = image.at<uchar>(x,y);
-      circle(points,
+      cor = image.at<Vec3b>(x,y);
+      circle(arte,
              cv::Point(y,x),
              RAIO,
-             CV_RGB(gray,gray,gray),
+             CV_RGB(cor[2],cor[1],cor[0]),
              -1,
              CV_AA);
     }
   }
+
+  cvtColor(arte, cinza, CV_BGR2GRAY);
+  GaussianBlur(cinza, borrar, Size(5,5), 25, 25);
+  Canny(borrar, bordas,fator,3*fator);
+
+  for(int i=0;i<arte.rows;i++){
+    for(int j=0;j<arte.cols;j++){
+        if(bordas.at<uchar>(i,j)==255){
+          cor = arte.at<Vec3b>(i,j);
+          circle(arte,
+                 cv::Point(j,i),
+                 1,
+                 CV_RGB(cor[2],cor[1],cor[0]),
+                 -1,
+                 CV_AA);
+          }
+        }
+
+    }
+
+  
+
+
   //imwrite("pontos.jpg", points);
-  imshow("pontos", points);
+ // imshow("pontos", points);
+  imshow("pontos",arte);
   waitKey();
   return 0;
+    
 }
