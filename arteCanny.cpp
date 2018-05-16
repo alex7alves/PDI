@@ -20,9 +20,22 @@
 using namespace std;
 using namespace cv;
 
-#define STEP 5
-#define JITTER 3
-#define RAIO 4
+
+
+vector<int> AmostrarCentros(vector<int> y, int passo)
+{
+  for(uint i=0; i<y.size(); i++){
+    y[i]= y[i]*passo+passo/2;
+  }
+  return y;
+}
+
+void Circulo(Mat im, Mat art, Vec3b cor, int raio,int x,int y )
+{
+  cor = im.at<Vec3b>(x,y);
+  circle(art,cv::Point(y,x),raio,CV_RGB(cor[2],cor[1],cor[0]),-1, CV_AA);
+}
+
 
 int main(int argc, char** argv){
   vector<int> yrange;
@@ -31,8 +44,8 @@ int main(int argc, char** argv){
   Mat image, frame, points,cinza,borrar,bordas;
   int fator =60;
 
-  int width, height;
   int x, y;
+  int STEP=5,JITTER=3,RAIO=4; 
   image = imread(argv[1]);
   Mat  arte(image.rows,image.cols,image.type());
   Vec3b cor;
@@ -40,30 +53,21 @@ int main(int argc, char** argv){
   srand(time(0));
   
   if(!image.data){
-	cout << "nao abriu" << argv[1] << endl;
+	  cout << "nao abriu" << argv[1] << endl;
     cout << argv[0] << " imagem.jpg";
     exit(0);
   }
 
-  width=image.size().width;
-  height=image.size().height;
-
-  xrange.resize(height/STEP);
-  yrange.resize(width/STEP);
+  xrange.resize(image.rows/STEP);
+  yrange.resize(image.cols/STEP);
   
   iota(xrange.begin(), xrange.end(), 0); 
   iota(yrange.begin(), yrange.end(), 0);
 
-  for(uint i=0; i<xrange.size(); i++){
-    xrange[i]= xrange[i]*STEP+STEP/2;
-  }
 
-  for(uint i=0; i<yrange.size(); i++){
-    yrange[i]= yrange[i]*STEP+STEP/2;
-  }
-
-  //points = Mat(height, width, CV_8U, Scalar(255));
-
+  xrange=AmostrarCentros(xrange,STEP);
+  yrange=AmostrarCentros(yrange,STEP);
+ 
   random_shuffle(xrange.begin(), xrange.end());
   
   for(auto i : xrange){
@@ -71,13 +75,7 @@ int main(int argc, char** argv){
     for(auto j : yrange){
       x = i+rand()%(2*JITTER)-JITTER+1;
       y = j+rand()%(2*JITTER)-JITTER+1;
-      cor = image.at<Vec3b>(x,y);
-      circle(arte,
-             cv::Point(y,x),
-             RAIO,
-             CV_RGB(cor[2],cor[1],cor[0]),
-             -1,
-             CV_AA);
+      Circulo(image,arte,cor,RAIO,x,y);
     }
   }
 
@@ -88,13 +86,7 @@ int main(int argc, char** argv){
   for(int i=0;i<arte.rows;i++){
     for(int j=0;j<arte.cols;j++){
         if(bordas.at<uchar>(i,j)==255){
-          cor = arte.at<Vec3b>(i,j);
-          circle(arte,
-                 cv::Point(j,i),
-                 1,
-                 CV_RGB(cor[2],cor[1],cor[0]),
-                 -1,
-                 CV_AA);
+          Circulo(arte,arte,cor,1,i,j);
           }
         }
 
